@@ -58,14 +58,15 @@ class Studentlist:
                     par = self.students[s]['parents'].split('\n')
                     p_num = 1
                     for p in par:
-                        if p != '':
-                            parent = {}
-                            base = p.split(': ')
+                        parent = {}
+                        base = p.split(': ')
+                        if len(base) > 1:
                             parent['name'] = base[0]
+                        
                             base = base[1].split(', ')
                             parent['phone'] = base[0]
                             parent['email'] = base[1]
-                            
+                        
                             self.students[s]['parent' + str(p_num)] = self.templates.parent_template.safe_substitute(parent)
 
                             p_num += 1
@@ -114,3 +115,15 @@ class Studentlist:
                 outfile.close()
             except OSError as e:
                 self.error, self.error_msg = True, 'write() ' + str(e)
+
+def test():
+    global xml, s
+    s = Studentlist()
+    #s.load(open("lists/04a.xml").read()[3:])
+    with codecs.open("lists/04a.xml", encoding='utf-8') as f:
+        xml = ''
+        for line in f:
+            xml += repr(line)
+        s.load(xml[7:])
+    
+    
