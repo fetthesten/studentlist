@@ -18,6 +18,18 @@ class StudentlistTemplate:
 
         self.out_template = Template('$name,$email,$phone,$parent1\n,,,$parent2\n')
 
+    def new_templates(self):
+        self.in_template = {}
+        self.in_template['firstname'] = Template('$COLUMNDATA1')
+        self.in_template['lastname'] = Template('$COLUMNDATA')
+        self.in_template['email'] = Template('$COLUMNDATA2')
+        self.in_template['phone'] = Template('$COLUMNDATA3')
+        self.in_template['parents'] = Template('$COLUMNDATA4')
+
+        self.parent_template = Template('$name,$phone,$email')
+
+        self.out_template = Template('$phone;$firstname;$lastname;$email;;;;;Elev;$parent1;$parent2;;\n')
+
     def birthdaycal(self):
         self.in_template = {}
         self.in_template['name'] = Template('$COLUMNDATA')
@@ -93,17 +105,16 @@ class Studentlist:
         self.templates.default_templates()
         return d
         
-    def write(self):
+    def write(self, outfilename = False):
         if not self.error:
-            outfilename = self.loadedfile[:self.loadedfile.rfind('.')]
-            if outfilename[-1:] in '\/.':
-                outfilename += '_ERR'
-
+            if not outfilename:
+                outfilename = './lists/outfile'
+            
             i = 0
             collision = True
 
             while collision:
-                ofn = outfilename + str(i) + '.txt'
+                ofn = outfilename + '_' + str(i) + '.txt'
                 if not isfile(ofn):
                     outfilename = ofn
                     collision = False
@@ -120,10 +131,41 @@ def test():
     global xml, s
     s = Studentlist()
     #s.load(open("lists/04a.xml").read()[3:])
-    with codecs.open("lists/04a.xml", encoding='utf-8') as f:
+    s.templates.new_templates()
+    with codecs.open('lists/04a.xml', encoding='utf-8') as f:
         xml = ''
         for line in f:
-            xml += repr(line)
-        s.load(xml[7:])
-    
-    
+            #xml += repr(line)
+            xml += line
+        s.load(xml)
+    s.write('lists/04a')
+
+def parents():
+    global xml, s, parentz, pz
+    s = Studentlist()
+    s.templates.new_templates()
+    with codecs.open('lists/04a.xml', encoding='utf-8') as f:
+        xml = ''
+        for line in f:
+            xml += line
+        s.load(xml)
+    pz = []
+    for student in s.students:
+        pars = student['parents'].split('\n')
+        for p in pars:
+            if p:
+                pz.append(p)
+
+    parentz = ''
+    for p in pz:
+        if p != 'None':
+            base = p.split(': ')
+            name = base[0]
+            n = name.split(', ')
+            name = n[1] + ';' + n[0] + ';'
+            deets = base[1].split(', ')
+            result = deets[0]+ ';' + name + deets[1] + ';;;;;;;;;\n'
+            parentz += result
+
+            with codecs.open('lists/parents.txt', 'w', 'mbcs') as outfile:
+                outfile.write(parentz)
